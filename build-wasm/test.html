@@ -29,11 +29,9 @@
 				var idd = imageData.data;
 				document.body.appendChild(canvas);
 
-				var decodeCallback = function (ptr, len, resultIndex, resultCount) {
-					var result = new Uint8Array(ZXing.HEAPU8.buffer, ptr, len);
-					window.resultString = String.fromCharCode.apply(null, result);
+				var decodeCallback = function (resultArr, x0,y0, x1,y1, x2,y2, x3,y3) {
+					window.resultString = String.fromCharCode.apply(null, resultArr);
 				};
-				var decodePtr = ZXing.Runtime.addFunction(decodeCallback);
 
 				var image = ZXing._resize(width, height);
 
@@ -41,7 +39,8 @@
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
 
-				var err = ZXing._decode_qr(decodePtr);
+				var err = ZXing._decode_qr();
+				ZXing._decode_results.forEach(function(res) { decodeCallback.apply(null, res); });
 
 				console.log("error code", err);
 				console.log("result", window.resultString);
@@ -52,36 +51,36 @@
 					for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 						ZXing.HEAPU8[image + j] = idd[i];
 					}
-					err = ZXing._decode_qr_multi(decodePtr);
-					err = ZXing._decode_qr(decodePtr);
+					err = ZXing._decode_qr_multi();
+					err = ZXing._decode_qr();
 				}
 
 				console.time("decode QR");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_qr(decodePtr);
+				err = ZXing._decode_qr();
 				console.timeEnd("decode QR");
 
 				console.time("decode QR multi");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_qr_multi(decodePtr);
+				err = ZXing._decode_qr_multi();
 				console.timeEnd("decode QR multi");
 
 				console.time("decode any");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_any(decodePtr);
+				err = ZXing._decode_any();
 				console.timeEnd("decode any");
 
 				console.time("decode multi");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_multi(decodePtr);
+				err = ZXing._decode_multi();
 				console.timeEnd("decode multi");
 
 			};

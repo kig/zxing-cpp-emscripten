@@ -28,6 +28,7 @@
 #include <zxing/common/IllegalArgumentException.h>
 #include <zxing/BinaryBitmap.h>
 #include <zxing/DecodeHints.h>
+// #include <stdio.h>
 
 #include <zxing/qrcode/QRCodeReader.h>
 #include <zxing/multi/qrcode/QRCodeMultiReader.h>
@@ -215,8 +216,7 @@ extern "C" {
   }
 
 
-  int __decode(DECODE_MODE mode, void *decode_callback(const char *resultStr, int resultStrLen, int resultIndex, int resultCount,
-    float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3 )) {
+  int __decode(DECODE_MODE mode) {
     vector<Ref<Result> > results;
     int res = -1;
 
@@ -243,7 +243,7 @@ extern "C" {
       res = 0;
 
     } catch (const ReaderException& e) {
-      // cell_result = "zxing::ReaderException: " + string(e.what());
+      // printf("%s\n", ("zxing::ReaderException: " + string(e.what())).c_str());
       res = -2;
     } catch (const zxing::IllegalArgumentException& e) {
       // cell_result = "zxing::IllegalArgumentException: " + string(e.what());
@@ -255,6 +255,10 @@ extern "C" {
       // cell_result = "std::exception: " + string(e.what());
       res = -5;
     }
+
+    EM_ASM({
+      ZXing._decode_results = [];
+    });
 
     if (res == 0) {
       for (int i=0; i<results.size(); i++) {
@@ -268,7 +272,17 @@ extern "C" {
             ys[j] = points[j]->getY();
         }
 
-        decode_callback(result.c_str(), result.size(), i, results.size(), 
+        EM_ASM_({
+					var resultPtr = new Uint8Array(ZXing.HEAPU8.buffer, $0, $1);
+          var resultArr = new Uint8Array(resultPtr);
+          ZXing._decode_results.push([
+            resultArr, 
+            $2, $3,
+            $4, $5,
+            $6, $7
+          ]);
+        }, 
+          result.c_str(), result.size(), 
           xs[0], ys[0],
           xs[1], ys[1],
           xs[2], ys[2],
@@ -281,20 +295,20 @@ extern "C" {
   }
 
 
-  int decode_qr(void *callback(const char*, int, int, int, float, float, float, float, float, float, float, float)) {
-    return __decode(DECODE_MODE::QR, callback);
+  int decode_qr() {
+    return __decode(DECODE_MODE::QR);
   }
 
-  int decode_qr_multi(void *callback(const char*, int, int, int, float, float, float, float, float, float, float, float)) {
-    return __decode(DECODE_MODE::QR_MULTI, callback);
+  int decode_qr_multi() {
+    return __decode(DECODE_MODE::QR_MULTI);
   }
 
-  int decode_any(void *callback(const char*, int, int, int, float, float, float, float, float, float, float, float)) {
-    return __decode(DECODE_MODE::ANY, callback);
+  int decode_any() {
+    return __decode(DECODE_MODE::ANY);
   }
 
-  int decode_multi(void *callback(const char*, int, int, int, float, float, float, float, float, float, float, float)) {
-    return __decode(DECODE_MODE::MULTI, callback);
+  int decode_multi() {
+    return __decode(DECODE_MODE::MULTI);
   }
 
 }

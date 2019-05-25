@@ -42,7 +42,7 @@ if (EMSCRIPTEN)
     set(CMAKE_CXX_CREATE_STATIC_LIBRARY "<CMAKE_AR> -o <TARGET> <LINK_FLAGS> <OBJECTS>")
 endif()
 
-set(CMAKE_CXX_FLAGS "-std=c++11 --bind -Oz -s RESERVED_FUNCTION_POINTERS=20 -s EXPORT_NAME=\"'ZXing'\" -s MODULARIZE=1 -s DISABLE_EXCEPTION_CATCHING=0 --memory-init-file 0 -s EXPORTED_FUNCTIONS=\"['_resize','_decode_qr','_decode_qr_multi','_decode_any','_decode_multi']\"")
+set(CMAKE_CXX_FLAGS "-std=c++11 --bind -O3 -s WASM=1 -s DISABLE_EXCEPTION_CATCHING=0 --memory-init-file 0 -s EXPORTED_FUNCTIONS=\"['_resize','_decode_qr','_decode_qr_multi','_decode_any','_decode_multi']\"")
 
 # Add libzxing library.
 file(GLOB_RECURSE LIBZXING_FILES
@@ -52,7 +52,7 @@ file(GLOB_RECURSE LIBZXING_FILES
     "./core/src/*.hh"
 )
 include_directories("./core/src/")
-add_library(libzxing STATIC ${LIBZXING_FILES})
+add_library(libzxing ${LIBZXING_FILES})
 set_target_properties(libzxing PROPERTIES PREFIX "")
 add_definitions(-DNO_ICONV=1)
 
@@ -62,17 +62,3 @@ file(GLOB_RECURSE ZXING_FILES
 )
 add_executable(zxing ${ZXING_FILES})
 target_link_libraries(zxing libzxing)
-
-# Add testrunner executable.
-find_package(CPPUNIT)
-if(CPPUNIT_FOUND)
-    file(GLOB_RECURSE TESTRUNNER_FILES
-        "./core/tests/src/*.cpp"
-        "./core/tests/src/*.h"
-    )
-    add_executable(testrunner ${TESTRUNNER_FILES})
-    include_directories(${CPPUNIT_INCLUDE_DIR})
-    target_link_libraries(testrunner libzxing  ${CPPUNIT_LIBRARIES})
-else()
-    message(WARNING "Not building testrunner, because CppUnit is missing")
-endif()
