@@ -1,6 +1,6 @@
-# Building WebAssembly ZXing on Windows
+# WebAssembly ZXing
 
-The repository is based on [ZXing Emscripten build](https://github.com/kig/zxing-cpp-emscripten).
+With big thanks to Xiao Ling for sorting out the Windows build and WebAssembly build process in [WebAssembly ZXing Windows Build fork](https://github.com/yushulx/zxing-cpp-emscripten) 
 
 ## Emscripten Installation
 1. Download [emsdk-portable-64bit.zip](https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable-64bit.zip)
@@ -67,59 +67,65 @@ To use:
 				var idd = imageData.data;
 				document.body.appendChild(canvas);
 
-				var decodeCallback = function (ptr, len, resultIndex, resultCount) {
-					var result = new Uint8Array(ZXing.HEAPU8.buffer, ptr, len);
-					window.resultString = String.fromCharCode.apply(null, result);
-				};
-				var decodePtr = ZXing.Runtime.addFunction(decodeCallback);
-
 				var image = ZXing._resize(width, height);
 
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
 
-				var err = ZXing._decode_qr(decodePtr);
+				var err = ZXing._decode_qr();
+				var res = ZXing._decode_results[0];
+				var resultString = '';
+				if (res) {
+					resultString = String.fromCharCode.apply(null, res[0]);
+					ctx.beginPath();
+					ctx.moveTo(res[1], res[2]);
+					ctx.lineTo(res[3], res[4]);
+					ctx.lineTo(res[5], res[6]);
+					ctx.lineTo(res[7], res[8]);
+					ctx.closePath();
+					ctx.lineWidth = 4;
+					ctx.strokeStyle = 'red';
+					ctx.stroke();
+					console.log("result", resultString);
+				}
 
-				console.log("error code", err);
-				console.log("result", window.resultString);
-
-				document.body.appendChild(document.createTextNode(err ? ("error: " + err) : window.resultString));
+				document.body.appendChild(document.createTextNode(err ? ("error: " + err) : resultString));
 
 				for (var k = 0; k < 50; k++) {
 					for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 						ZXing.HEAPU8[image + j] = idd[i];
 					}
-					err = ZXing._decode_qr_multi(decodePtr);
-					err = ZXing._decode_qr(decodePtr);
+					err = ZXing._decode_qr_multi();
+					err = ZXing._decode_qr();
 				}
 
 				console.time("decode QR");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_qr(decodePtr);
+				err = ZXing._decode_qr();
 				console.timeEnd("decode QR");
 
 				console.time("decode QR multi");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_qr_multi(decodePtr);
+				err = ZXing._decode_qr_multi();
 				console.timeEnd("decode QR multi");
 
 				console.time("decode any");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_any(decodePtr);
+				err = ZXing._decode_any();
 				console.timeEnd("decode any");
 
 				console.time("decode multi");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_multi(decodePtr);
+				err = ZXing._decode_multi();
 				console.timeEnd("decode multi");
 
 			};
@@ -129,13 +135,22 @@ To use:
 ```
 
 ## WebAssembly ZXing
-To build:
+Windows build:
 
   1. `cd build-wasm`
   2. Run `configure.bat`
   3. Run `build.bat`
   4. Add the path of **build-wasm** folder to **IIS**.
   5. Open `http://localhost:2588/test.html`.
+
+Linux / OSX build:
+
+  1. `cd build-wasm`
+  2. `cp CMakeLists.txt ..`
+	3. `emconfigure cmake ..`
+	4. `emmake make -j8`
+	5. `serve`
+	6. Open `http://localhost:5000/test.html`
 
 To use:
 
@@ -168,59 +183,65 @@ To use:
 				var idd = imageData.data;
 				document.body.appendChild(canvas);
 
-				var decodeCallback = function (ptr, len, resultIndex, resultCount) {
-					var result = new Uint8Array(ZXing.HEAPU8.buffer, ptr, len);
-					window.resultString = String.fromCharCode.apply(null, result);
-				};
-				var decodePtr = ZXing.Runtime.addFunction(decodeCallback);
-
 				var image = ZXing._resize(width, height);
 
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
 
-				var err = ZXing._decode_qr(decodePtr);
+				var err = ZXing._decode_qr();
+				var res = ZXing._decode_results[0];
+				var resultString = '';
+				if (res) {
+					resultString = String.fromCharCode.apply(null, res[0]);
+					ctx.beginPath();
+					ctx.moveTo(res[1], res[2]);
+					ctx.lineTo(res[3], res[4]);
+					ctx.lineTo(res[5], res[6]);
+					ctx.lineTo(res[7], res[8]);
+					ctx.closePath();
+					ctx.lineWidth = 4;
+					ctx.strokeStyle = 'red';
+					ctx.stroke();
+					console.log("result", resultString);
+				}
 
-				console.log("error code", err);
-				console.log("result", window.resultString);
-
-				document.body.appendChild(document.createTextNode(err ? ("error: " + err) : window.resultString));
+				document.body.appendChild(document.createTextNode(err ? ("error: " + err) : resultString));
 
 				for (var k = 0; k < 50; k++) {
 					for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 						ZXing.HEAPU8[image + j] = idd[i];
 					}
-					err = ZXing._decode_qr_multi(decodePtr);
-					err = ZXing._decode_qr(decodePtr);
+					err = ZXing._decode_qr_multi();
+					err = ZXing._decode_qr();
 				}
 
 				console.time("decode QR");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_qr(decodePtr);
+				err = ZXing._decode_qr();
 				console.timeEnd("decode QR");
 
 				console.time("decode QR multi");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_qr_multi(decodePtr);
+				err = ZXing._decode_qr_multi();
 				console.timeEnd("decode QR multi");
 
 				console.time("decode any");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_any(decodePtr);
+				err = ZXing._decode_any();
 				console.timeEnd("decode any");
 
 				console.time("decode multi");
 				for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
 					ZXing.HEAPU8[image + j] = idd[i];
 				}
-				err = ZXing._decode_multi(decodePtr);
+				err = ZXing._decode_multi();
 				console.timeEnd("decode multi");
 
 			};

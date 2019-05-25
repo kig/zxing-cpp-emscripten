@@ -23,15 +23,10 @@
 				canvas.width = width;
 				canvas.height = height;
 				var ctx = canvas.getContext('2d');
-				// ctx.rotate(Math.random()*0.1-0.05);
 				ctx.drawImage(this, 0, 0, width, height);
 				var imageData = ctx.getImageData(0, 0, width, height);
 				var idd = imageData.data;
 				document.body.appendChild(canvas);
-
-				var decodeCallback = function (resultArr, x0,y0, x1,y1, x2,y2, x3,y3) {
-					window.resultString = String.fromCharCode.apply(null, resultArr);
-				};
 
 				var image = ZXing._resize(width, height);
 
@@ -40,12 +35,25 @@
 				}
 
 				var err = ZXing._decode_qr();
-				ZXing._decode_results.forEach(function(res) { decodeCallback.apply(null, res); });
-
 				console.log("error code", err);
-				console.log("result", window.resultString);
 
-				document.body.appendChild(document.createTextNode(err ? ("error: " + err) : window.resultString));
+				var res = ZXing._decode_results[0];
+				var resultString = '';
+				if (res) {
+					resultString = String.fromCharCode.apply(null, res[0]);
+					ctx.beginPath();
+					ctx.moveTo(res[1], res[2]);
+					ctx.lineTo(res[3], res[4]);
+					ctx.lineTo(res[5], res[6]);
+					ctx.lineTo(res[7], res[8]);
+					ctx.closePath();
+					ctx.lineWidth = 4;
+					ctx.strokeStyle = 'red';
+					ctx.stroke();
+					console.log("result", resultString);
+				}
+
+				document.body.appendChild(document.createTextNode(err ? ("error: " + err) : resultString));
 
 				for (var k = 0; k < 50; k++) {
 					for (var i = 0, j = 0; i < idd.length; i += 4, j++) {
